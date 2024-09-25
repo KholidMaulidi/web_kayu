@@ -46,6 +46,7 @@ class BondedWoodController extends Controller
 
         Storage::disk('public')->put($imageName, file_get_contents($request->image));
 
+
         $bondedWood = BondedWood::create([
             'id_type' => $validated['id_type'],
             'id_wood' => $validated['id_wood'],
@@ -55,9 +56,21 @@ class BondedWoodController extends Controller
             'quantity' => $validated['quantity'],
         ]);
 
+        $bondedWood->load('woodType');
+        $bondedWood->load('wood');
+
+
         return response()->json([
             'message' => 'BondedWood successfully created.',
-            $bondedWood, 
+            'data' => [
+                'id' => $bondedWood->id,
+                'id_type' => $bondedWood->woodType->type_name,
+                'id_wood' => $bondedWood->wood->wood_name,
+                'image' => $bondedWood->image,
+                'size' => $bondedWood->size,
+                'price' => $bondedWood->price,
+                'quantity' => $bondedWood->quantity,
+            ]
         ], 201);
     }
 
@@ -124,11 +137,22 @@ class BondedWoodController extends Controller
             $bondedWood->price = $validated['price'];
             $bondedWood->quantity = $validated['quantity'];
             $bondedWood->save();
+
+            $bondedWood->load('woodType');
+            $bondedWood->load('wood');
         
             return response()->json([
-                'message' => 'BondedWood successfully updated.',
-                'data' => $bondedWood,
-            ], 200);
+                'message' => 'BondedWood successfully created.',
+                'data' => [
+                    'id' => $bondedWood->id,
+                    'id_type' => $bondedWood->woodType->type_name,
+                    'id_wood' => $bondedWood->wood->wood_name,
+                    'image' => $bondedWood->image,
+                    'size' => $bondedWood->size,
+                    'price' => $bondedWood->price,
+                    'quantity' => $bondedWood->quantity,
+                ]
+            ], 201);
         
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'BondedWood not found'], 404);

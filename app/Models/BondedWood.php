@@ -21,10 +21,10 @@ class BondedWood extends Model
     ];
 
     public function woodType(){
-        return $this->belongsTo(TypeWood::class, 'id_type');
+        return $this->belongsTo(TypeWood::class, 'id_type', 'id');
     }
 
     public function wood(){
-        return $this->belongsTo(Wood::class, 'id_wood');
+        return $this->belongsTo(Wood::class, 'id_wood', "id");
     }
 }

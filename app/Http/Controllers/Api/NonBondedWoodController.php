@@ -53,9 +53,19 @@ class NonBondedWoodController extends Controller
             'price' => $validated['price'],
         ]);
 
+        $nonBondedWood->load('woodType');
+        $nonBondedWood->load('wood');
+
         return response()->json([
             'message' => 'BondedWood successfully created.',
-            $nonBondedWood, 
+            'data' => [
+                'id' => $nonBondedWood->id,
+                'id_type' => $nonBondedWood->woodType->type_name,
+                'id_wood' => $nonBondedWood->wood->wood_name,
+                'image' => $nonBondedWood->image,
+                'size' => $nonBondedWood->size,
+                'price' => $nonBondedWood->price,
+            ]
         ], 201);
     }
 
@@ -120,11 +130,21 @@ class NonBondedWoodController extends Controller
             $nonBondedWood->size = $validated['size'];
             $nonBondedWood->price = $validated['price'];
             $nonBondedWood->save();
+
+            $nonBondedWood->load('woodType');
+            $nonBondedWood->load('wood');
         
             return response()->json([
-                'message' => 'nonBondedWood successfully updated.',
-                'data' => $nonBondedWood,
-            ], 200);
+                'message' => 'BondedWood successfully created.',
+                'data' => [
+                    'id' => $nonBondedWood->id,
+                    'id_type' => $nonBondedWood->woodType->type_name,
+                    'id_wood' => $nonBondedWood->wood->wood_name,
+                    'image' => $nonBondedWood->image,
+                    'size' => $nonBondedWood->size,
+                    'price' => $nonBondedWood->price,
+                ]
+            ], 201);
         
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'nonBondedWood not found'], 404);
