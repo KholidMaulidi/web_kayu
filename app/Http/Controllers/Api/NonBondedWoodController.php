@@ -15,8 +15,26 @@ class NonBondedWoodController extends Controller
      */
     public function index()
     {
-        $nonBondedWoods = NonBondedWood::all();
-        return response()->json($nonBondedWoods, 200);
+        $nonBondedWood = NonBondedWood::all();
+
+        $nonBondedWood->load(['woodType', 'wood']);
+
+        $response = $nonBondedWood->map(function ($nonBondedWood) {
+            return [
+                'id' => $nonBondedWood->id,
+                'id_type' => $nonBondedWood->woodType->type_name,  
+                'id_wood' => $nonBondedWood->wood->wood_name,      
+                'image' => $nonBondedWood->image, 
+                'size' => $nonBondedWood->size,
+                'price' => $nonBondedWood->price,
+            ];
+        });
+    
+        // Return JSON response
+        return response()->json([
+            'message' => 'nonBonded$nonBondedWood Database.',
+            'data' => $response
+        ], 200);
     }
 
     /**

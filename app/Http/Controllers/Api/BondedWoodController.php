@@ -16,8 +16,27 @@ class BondedWoodController extends Controller
      */
     public function index()
     {
-        $bondedWoods = BondedWood::all();
-        return response()->json($bondedWoods, 200);
+        $bondedWood = BondedWood::all();
+
+        $bondedWood->load(['woodType', 'wood']);
+
+        $response = $bondedWood->map(function ($bondedWood) {
+            return [
+                'id' => $bondedWood->id,
+                'id_type' => $bondedWood->woodType->type_name,  
+                'id_wood' => $bondedWood->wood->wood_name,      
+                'image' => $bondedWood->image, 
+                'size' => $bondedWood->size,
+                'price' => $bondedWood->price,
+                'quantity' => $bondedWood->quantity,
+            ];
+        });
+    
+        // Return JSON response
+        return response()->json([
+            'message' => 'BondedWood Database.',
+            'data' => $response
+        ], 200);
     }
 
     /**
@@ -46,6 +65,7 @@ class BondedWoodController extends Controller
 
         Storage::disk('public')->put($imageName, file_get_contents($request->image));
 
+        
 
         $bondedWood = BondedWood::create([
             'id_type' => $validated['id_type'],
@@ -58,7 +78,6 @@ class BondedWoodController extends Controller
 
         $bondedWood->load('woodType');
         $bondedWood->load('wood');
-
 
         return response()->json([
             'message' => 'BondedWood successfully created.',
