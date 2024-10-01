@@ -16,27 +16,22 @@ class BondedWoodController extends Controller
      */
     public function index()
     {
-        $bondedWood = BondedWood::all();
+        $bondedWoods = BondedWood::with(['woodType', 'wood'])->get();
 
-        $bondedWood->load(['woodType', 'wood']);
-
-        $response = $bondedWood->map(function ($bondedWood) {
+        // Format data untuk respons
+        $data = $bondedWoods->map(function ($bondedWood) {
             return [
                 'id' => $bondedWood->id,
-                'id_type' => $bondedWood->woodType->type_name,  
-                'id_wood' => $bondedWood->wood->wood_name,      
-                'image' => $bondedWood->image, 
+                'type_name' => $bondedWood->woodType->type_name,
+                'wood_name' => $bondedWood->wood->wood_name,
+                'image' => $bondedWood->image,
                 'size' => $bondedWood->size,
                 'price' => $bondedWood->price,
                 'quantity' => $bondedWood->quantity,
             ];
         });
-    
-        // Return JSON response
-        return response()->json([
-            'message' => 'BondedWood Database.',
-            'data' => $response
-        ], 200);
+
+        return response()->json($data, 200);
     }
 
     /**
@@ -65,7 +60,6 @@ class BondedWoodController extends Controller
 
         Storage::disk('public')->put($imageName, file_get_contents($request->image));
 
-        
 
         $bondedWood = BondedWood::create([
             'id_type' => $validated['id_type'],
@@ -78,6 +72,7 @@ class BondedWoodController extends Controller
 
         $bondedWood->load('woodType');
         $bondedWood->load('wood');
+
 
         return response()->json([
             'message' => 'BondedWood successfully created.',
@@ -98,14 +93,23 @@ class BondedWoodController extends Controller
      */
     public function show(string $id)
     {
-        $bondedWood = BondedWood::find($id);
+        $bondedWood = BondedWood::with(['woodType', 'wood'])->find($id);
 
         if (!$bondedWood) {
             return response()->json(['message' => 'BondedWood not found'], 404);
         }
 
-        return response()->json($bondedWood, 200);
+        return response()->json([
+            'id' => $bondedWood->id,
+            'type_name' => $bondedWood->woodType->type_name,
+            'wood_name' => $bondedWood->wood->wood_name,
+            'image' => $bondedWood->image,
+            'size' => $bondedWood->size,
+            'price' => $bondedWood->price,
+            'quantity' => $bondedWood->quantity,
+        ], 200);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -122,11 +126,11 @@ class BondedWoodController extends Controller
     {
         try {
             $bondedWood = BondedWood::find($id);
-        
+
             if (!$bondedWood) {
                 return response()->json(['message' => 'BondedWood not found'], 404);
             }
-        
+
             // Validasi data
             $validated = $request->validate([
                 'id_type' => 'required|exists:type_wood,id',
@@ -136,19 +140,19 @@ class BondedWoodController extends Controller
                 'price' => 'required|integer',
                 'quantity' => 'required|string|max:255',
             ]);
-    
-        
+
+
             if ($request->hasFile('image')) {
                 if (Storage::disk('public')->exists($bondedWood->image)) {
                     Storage::disk('public')->delete($bondedWood->image);
                 }
-        
+
                 $imageName = Str::random(32) . "." . $request->image->getClientOriginalExtension();
                 Storage::disk('public')->put($imageName, file_get_contents($request->image));
-        
+
                 $bondedWood->image = $imageName;
             }
-            
+
             $bondedWood->id_type = $validated['id_type'];
             $bondedWood->id_wood = $validated['id_wood'];
             $bondedWood->image = $imageName;
@@ -159,7 +163,7 @@ class BondedWoodController extends Controller
 
             $bondedWood->load('woodType');
             $bondedWood->load('wood');
-        
+
             return response()->json([
                 'message' => 'BondedWood successfully created.',
                 'data' => [
@@ -172,7 +176,7 @@ class BondedWoodController extends Controller
                     'quantity' => $bondedWood->quantity,
                 ]
             ], 201);
-        
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'BondedWood not found'], 404);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -185,8 +189,9 @@ class BondedWoodController extends Controller
                 'message' => 'An error occurred: ' . $e->getMessage(),
             ], 500);
         }
-        
+
     }
+
 
 
 
@@ -204,5 +209,25 @@ class BondedWoodController extends Controller
         $bondedWood->delete();
 
         return response()->json(['message' => 'BondedWood deleted successfully'], 200);
+    }
+
+    public function getAll()
+    {
+        $bondedWoods = BondedWood::with(['woodType', 'wood'])->get();
+
+        // Format data untuk respons
+        $data = $bondedWoods->map(function ($bondedWood) {
+            return [
+                'id' => $bondedWood->id,
+                'type_name' => $bondedWood->woodType->type_name,
+                'wood_name' => $bondedWood->wood->wood_name,
+                'image' => $bondedWood->image,
+                'size' => $bondedWood->size,
+                'price' => $bondedWood->price,
+                'quantity' => $bondedWood->quantity,
+            ];
+        });
+
+        return response()->json($data, 200);
     }
 }

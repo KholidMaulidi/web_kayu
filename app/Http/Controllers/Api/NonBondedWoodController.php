@@ -15,26 +15,21 @@ class NonBondedWoodController extends Controller
      */
     public function index()
     {
-        $nonBondedWood = NonBondedWood::all();
+        $nonbondedWoods = NonBondedWood::with(['woodType', 'wood'])->get();
 
-        $nonBondedWood->load(['woodType', 'wood']);
-
-        $response = $nonBondedWood->map(function ($nonBondedWood) {
+        // Format data untuk respons
+        $data = $nonbondedWoods->map(function ($nonbondedWood) {
             return [
-                'id' => $nonBondedWood->id,
-                'id_type' => $nonBondedWood->woodType->type_name,  
-                'id_wood' => $nonBondedWood->wood->wood_name,      
-                'image' => $nonBondedWood->image, 
-                'size' => $nonBondedWood->size,
-                'price' => $nonBondedWood->price,
+                'id' => $nonbondedWood->id,
+                'type_name' => $nonbondedWood->woodType->type_name,
+                'wood_name' => $nonbondedWood->wood->wood_name,
+                'image' => $nonbondedWood->image,
+                'size' => $nonbondedWood->size,
+                'price' => $nonbondedWood->price,
             ];
         });
-    
-        // Return JSON response
-        return response()->json([
-            'message' => 'nonBonded$nonBondedWood Database.',
-            'data' => $response
-        ], 200);
+
+        return response()->json($data, 200);
     }
 
     /**
@@ -92,13 +87,20 @@ class NonBondedWoodController extends Controller
      */
     public function show(string $id)
     {
-        $nonBondedWood = NonBondedWood::find($id);
+        $nonbondedWood = NonBondedWood::with(['woodType', 'wood'])->find($id);
 
-        if (!$nonBondedWood) {
-            return response()->json(['message' => 'NonBondedWood not found'], 404);
+        if (!$nonbondedWood) {
+            return response()->json(['message' => 'BondedWood not found'], 404);
         }
 
-        return response()->json($nonBondedWood, 200);
+        return response()->json([
+            'id' => $nonbondedWood->id,
+            'type_name' => $nonbondedWood->woodType->type_name,
+            'wood_name' => $nonbondedWood->wood->wood_name,
+            'image' => $nonbondedWood->image,
+            'size' => $nonbondedWood->size,
+            'price' => $nonbondedWood->price,
+        ], 200);
     }
 
     /**
@@ -116,11 +118,11 @@ class NonBondedWoodController extends Controller
     {
         try {
             $nonBondedWood = NonBondedWood::find($id);
-        
+
             if (!$nonBondedWood) {
                 return response()->json(['message' => 'nonBondedWood not found'], 404);
             }
-        
+
             // Validasi data
             $validated = $request->validate([
                 'id_type' => 'required|exists:type_wood,id',
@@ -129,19 +131,19 @@ class NonBondedWoodController extends Controller
                 'size' => 'required|string|max:255',
                 'price' => 'required|integer',
             ]);
-    
-        
+
+
             if ($request->hasFile('image')) {
                 if (Storage::disk('public')->exists($nonBondedWood->image)) {
                     Storage::disk('public')->delete($nonBondedWood->image);
                 }
-        
+
                 $imageName = Str::random(32) . "." . $request->image->getClientOriginalExtension();
                 Storage::disk('public')->put($imageName, file_get_contents($request->image));
-        
+
                 $nonBondedWood->image = $imageName;
             }
-            
+
             $nonBondedWood->id_type = $validated['id_type'];
             $nonBondedWood->id_wood = $validated['id_wood'];
             $nonBondedWood->image = $imageName;
@@ -151,7 +153,7 @@ class NonBondedWoodController extends Controller
 
             $nonBondedWood->load('woodType');
             $nonBondedWood->load('wood');
-        
+
             return response()->json([
                 'message' => 'BondedWood successfully created.',
                 'data' => [
@@ -163,7 +165,7 @@ class NonBondedWoodController extends Controller
                     'price' => $nonBondedWood->price,
                 ]
             ], 201);
-        
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['message' => 'nonBondedWood not found'], 404);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -192,5 +194,29 @@ class NonBondedWoodController extends Controller
         $nonBondedWood->delete();
 
         return response()->json(['message' => 'NonBondedWood deleted successfully'], 200);
+    }
+
+    public function getAll()
+    {
+        $nonBondedWood = NonBondedWood::all();
+
+        $nonBondedWood->load(['woodType', 'wood']);
+
+        $response = $nonBondedWood->map(function ($nonBondedWood) {
+            return [
+                'id' => $nonBondedWood->id,
+                'type_name' => $nonBondedWood->woodType->type_name,
+                'wood_name' => $nonBondedWood->wood->wood_name,
+                'image' => $nonBondedWood->image,
+                'size' => $nonBondedWood->size,
+                'price' => $nonBondedWood->price,
+            ];
+        });
+
+        // Return JSON response
+        return response()->json([
+            'message' => 'nonBonded$nonBondedWood Database.',
+            'data' => $response
+        ], 200);
     }
 }
